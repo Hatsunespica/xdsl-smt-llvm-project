@@ -14,9 +14,21 @@
 #include "llvm/Support/KnownBits.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/APInt.h"
+#include "llvm/Support/XORImpl.h"
 #include <cassert>
 
 using namespace llvm;
+static Vec<2> KBToVec(const KnownBits& kb){
+  return Vec<2>(kb.Zero, kb.One);
+}
+
+static KnownBits VecToKB(const Vec<2>& vec){
+  KnownBits kb;
+  kb.Zero = vec[0];
+  kb.One=vec[1];
+  return kb;
+}
 
 KnownBits KnownBits::flipSignBit(const KnownBits &Val) {
   unsigned SignBitPosition = Val.getBitWidth() - 1;
@@ -62,6 +74,7 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
                                       const KnownBits &RHS) {
   unsigned BitWidth = LHS.getBitWidth();
   KnownBits KnownOut(BitWidth);
+  return KnownOut;
   // This can be a relatively expensive helper, so optimistically save some
   // work.
   if (LHS.isUnknown() && RHS.isUnknown())
@@ -1110,10 +1123,15 @@ KnownBits &KnownBits::operator|=(const KnownBits &RHS) {
 
 KnownBits &KnownBits::operator^=(const KnownBits &RHS) {
   // Result bit is 0 if both operand bits are 0 or both are 1.
-  APInt Z = (Zero & RHS.Zero) | (One & RHS.One);
+  //APInt Z = (Zero & RHS.Zero) | (One & RHS.One);
   // Result bit is 1 if one operand bit is 0 and the other is 1.
-  One = (Zero & RHS.One) | (One & RHS.Zero);
-  Zero = std::move(Z);
+  //One = (Zero & RHS.One) | (One & RHS.Zero);
+  //Zero = std::move(Z);
+  //return *this;
+  auto LHS_vec = KBToVec(*this), RHS_vec= KBToVec(RHS);
+  auto res = xor_solution(LHS_vec, RHS_vec);
+  auto res_kb = VecToKB(res);
+  *this = res_kb;
   return *this;
 }
 
