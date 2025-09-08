@@ -16,6 +16,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/APInt.h"
 #include "llvm/Support/XORImpl.h"
+#include "llvm/Support/MulImpl.h"
 #include <cassert>
 
 using namespace llvm;
@@ -74,7 +75,6 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
                                       const KnownBits &RHS) {
   unsigned BitWidth = LHS.getBitWidth();
   KnownBits KnownOut(BitWidth);
-  return KnownOut;
   // This can be a relatively expensive helper, so optimistically save some
   // work.
   if (LHS.isUnknown() && RHS.isUnknown())
@@ -820,7 +820,10 @@ KnownBits KnownBits::mul(const KnownBits &LHS, const KnownBits &RHS,
   assert(BitWidth == RHS.getBitWidth() && "Operand mismatch");
   assert((!NoUndefSelfMultiply || LHS == RHS) &&
          "Self multiplication knownbits mismatch");
-
+  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
+  auto res = mul_solution(LHS_vec, RHS_vec);
+  auto res_kb = VecToKB(res);
+  return res_kb;
   // Compute the high known-0 bits by multiplying the unsigned max of each side.
   // Conservatively, M active bits * N active bits results in M + N bits in the
   // result. But if we know a value is a power-of-2 for example, then this

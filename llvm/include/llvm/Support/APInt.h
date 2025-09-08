@@ -50,4 +50,9 @@ public:
   APInt &operator[](unsigned int i) { return v[i]; }
 };
 
+Vec<2> getTop(Vec<2> arg){
+  APInt tmp(arg[0].getBitWidth(), 0);
+  return Vec<2>{tmp,tmp};
+}
+
 #endif
