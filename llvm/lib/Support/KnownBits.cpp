@@ -19,6 +19,8 @@
 #include "llvm/Support/MulImpl.h"
 #include "llvm/Support/AddImpl.h"
 #include "llvm/Support/SubImpl.h"
+#include "llvm/Support/LshrExactImpl.h"
+#include "llvm/Support/LshrImpl.h"
 #include <cassert>
 
 using namespace llvm;
@@ -390,6 +392,15 @@ KnownBits KnownBits::shl(const KnownBits &LHS, const KnownBits &RHS, bool NUW,
 KnownBits KnownBits::lshr(const KnownBits &LHS, const KnownBits &RHS,
                           bool ShAmtNonZero, bool Exact) {
   unsigned BitWidth = LHS.getBitWidth();
+  auto newRHS = RHS.zextOrTrunc(LHS.getBitWidth());
+  auto LHS_vec = KBToVec(LHS), RHS_vec = KBToVec(newRHS);
+  if(Exact){
+    auto res = lshrexact_solution(LHS_vec, RHS_vec);
+    return VecToKB(res);
+  }else{
+    auto res = lshr_solution(LHS_vec, RHS_vec);
+    return VecToKB(res);
+  }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known = LHS;
     Known.Zero.lshrInPlace(ShiftAmt);

@@ -1,0 +1,8 @@
+//
+// Created by spica on 9/8/25.
+//
+
+#ifndef XDSL_SMT_LLVM_PROJECT_SHLIMPL_H
+#define XDSL_SMT_LLVM_PROJECT_SHLIMPL_H
+
+#endif // XDSL_SMT_LLVM_PROJECT_SHLIMPL_H
