@@ -21,10 +21,15 @@
 #include "llvm/Support/SubImpl.h"
 #include "llvm/Support/LshrExactImpl.h"
 #include "llvm/Support/LshrImpl.h"
+#include "llvm/Support/AshrExactImpl.h"
+#include "llvm/Support/AshrImpl.h"
 #include "llvm/Support/ShlImpl.h"
 #include "llvm/Support/ShlNUWImpl.h"
 #include "llvm/Support/ShlNSWImpl.h"
 #include "llvm/Support/ShlNSUWImpl.h"
+#include "llvm/Support/SDivImpl.h"
+#include "llvm/Support/SDivExactImpl.h"
+
 #include <cassert>
 
 using namespace llvm;
@@ -474,6 +479,13 @@ KnownBits KnownBits::lshr(const KnownBits &LHS, const KnownBits &RHS,
 KnownBits KnownBits::ashr(const KnownBits &LHS, const KnownBits &RHS,
                           bool ShAmtNonZero, bool Exact) {
   unsigned BitWidth = LHS.getBitWidth();
+  auto newRHS=RHS.zextOrTrunc(BitWidth);
+  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
+  if (Exact){
+    return VecToKB(ashr_exact_solution(LHS_vec, RHS_vec));
+  }else{
+    return VecToKB(ashr_solution(LHS_vec, RHS_vec));
+  }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known = LHS;
     Known.Zero.ashrInPlace(ShiftAmt);
@@ -1013,6 +1025,12 @@ KnownBits KnownBits::sdiv(const KnownBits &LHS, const KnownBits &RHS,
     // Checking this earlier saves us a lot of special cases later on.
     Known.setAllZero();
     return Known;
+  }
+  auto LHS_vec= KBToVec(LHS), RHS_vec= KBToVec(RHS);
+  if(Exact){
+    return VecToKB(sdiv_exact_solution(LHS_vec, RHS_vec));
+  }else{
+    return VecToKB(sdiv_solution(LHS_vec, RHS_vec));
   }
 
   std::optional<APInt> Res;
