@@ -21,6 +21,10 @@
 #include "llvm/Support/SubImpl.h"
 #include "llvm/Support/LshrExactImpl.h"
 #include "llvm/Support/LshrImpl.h"
+#include "llvm/Support/ShlImpl.h"
+#include "llvm/Support/ShlNUWImpl.h"
+#include "llvm/Support/ShlNSWImpl.h"
+#include "llvm/Support/ShlNSUWImpl.h"
 #include <cassert>
 
 using namespace llvm;
@@ -307,6 +311,17 @@ static unsigned getMaxShiftAmount(const APInt &MaxValue, unsigned BitWidth) {
 KnownBits KnownBits::shl(const KnownBits &LHS, const KnownBits &RHS, bool NUW,
                          bool NSW, bool ShAmtNonZero) {
   unsigned BitWidth = LHS.getBitWidth();
+  auto newRHS = RHS.zextOrTrunc(LHS.getBitWidth());
+  auto LHS_vec = KBToVec(LHS), RHS_vec = KBToVec(newRHS);
+  if (NUW&&NSW){
+    return VecToKB(shl_nsuw_solution(LHS_vec, RHS_vec));
+  }else if(NUW){
+    return VecToKB(shl_nuw_solution(LHS_vec, RHS_vec));
+  }else if(NSW){
+    return VecToKB(shl_nsw_solution(LHS_vec, RHS_vec));
+  }else{
+    return VecToKB(shl_solution(LHS_vec, RHS_vec));
+  }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known;
     bool ShiftedOutZero, ShiftedOutOne;
