@@ -17,6 +17,8 @@
 #include "llvm/Support/APInt.h"
 #include "llvm/Support/XORImpl.h"
 #include "llvm/Support/MulImpl.h"
+#include "llvm/Support/AddImpl.h"
+#include "llvm/Support/SubImpl.h"
 #include <cassert>
 
 using namespace llvm;
@@ -75,6 +77,7 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
                                       const KnownBits &RHS) {
   unsigned BitWidth = LHS.getBitWidth();
   KnownBits KnownOut(BitWidth);
+  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
   // This can be a relatively expensive helper, so optimistically save some
   // work.
   if (LHS.isUnknown() && RHS.isUnknown())
@@ -83,14 +86,18 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
   if (!LHS.isUnknown() && !RHS.isUnknown()) {
     if (Add) {
       // Sum = LHS + RHS + 0
-      KnownOut = ::computeForAddCarry(LHS, RHS, /*CarryZero=*/true,
-                                      /*CarryOne=*/false);
+      //KnownOut = ::computeForAddCarry(LHS, RHS, /*CarryZero=*/true,
+      //                                /*CarryOne=*/false);
+      auto res = add_solution(LHS_vec, RHS_vec);
+      KnownOut= VecToKB(res);
     } else {
       // Sum = LHS + ~RHS + 1
-      KnownBits NotRHS = RHS;
-      std::swap(NotRHS.Zero, NotRHS.One);
-      KnownOut = ::computeForAddCarry(LHS, NotRHS, /*CarryZero=*/false,
-                                      /*CarryOne=*/true);
+      auto res = sub_solution(LHS_vec, RHS_vec);
+      KnownOut= VecToKB(res);
+      //KnownBits NotRHS = RHS;
+      //std::swap(NotRHS.Zero, NotRHS.One);
+      //KnownOut = ::computeForAddCarry(LHS, NotRHS, /*CarryZero=*/false,
+       //                               /*CarryOne=*/true);
     }
   }
 

@@ -55,4 +55,20 @@ Vec<2> getTop(Vec<2> arg){
   return Vec<2>{tmp,tmp};
 }
 
+APInt smin(APInt arg0, APInt arg1){
+  return arg0.sle(arg1)?arg0:arg1;
+}
+
+APInt umin(APInt arg0, APInt arg1){
+  return arg0.ule(arg1)?arg0:arg1;
+}
+
+APInt smax(APInt arg0, APInt arg1){
+  return arg0.sge(arg1)?arg0:arg1;
+}
+
+APInt umax(APInt arg0, APInt arg1){
+  return arg0.uge(arg1)?arg0:arg1;
+}
+
 #endif
