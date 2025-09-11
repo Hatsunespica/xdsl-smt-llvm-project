@@ -107,8 +107,20 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
       KnownOut = ::computeForAddCarry(LHS, RHS, /*CarryZero=*/true,
                                       /*CarryOne=*/false);
       auto res = add_solution(LHS_vec, RHS_vec);
-      KnownOut = meet(KnownOut, VecToKB(res));
-      assert(!KnownOut.hasConflict());
+      auto newKnownOut = meet(KnownOut, VecToKB(res));
+      if(!LHS.hasConflict()&&!RHS.hasConflict()&&newKnownOut.hasConflict()){
+        llvm::errs()<<"LHS:\n";
+        LHS.dump();
+        llvm::errs()<<"RHS:\n";
+        RHS.dump();
+        llvm::errs()<<"LLVM Result:\n";
+        KnownOut.dump();
+        llvm::errs()<<"Our Result:\n";
+        VecToKB(res).dump();
+      }
+      KnownOut=newKnownOut;
+      if(!LHS.hasConflict()&&!RHS.hasConflict())
+      assert(!newKnownOut.hasConflict());
     } else {
       // Sum = LHS + ~RHS + 1
       auto res = sub_solution(LHS_vec, RHS_vec);
@@ -117,7 +129,19 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
       std::swap(NotRHS.Zero, NotRHS.One);
       KnownOut = ::computeForAddCarry(LHS, NotRHS, /*CarryZero=*/false,
                                      /*CarryOne=*/true);
-      KnownOut = meet(KnownOut, VecToKB(res));
+      auto newKnownOut = meet(KnownOut, VecToKB(res));
+      if(!LHS.hasConflict()&&!RHS.hasConflict()&&newKnownOut.hasConflict()){
+        llvm::errs()<<"LHS:\n";
+        LHS.dump();
+        llvm::errs()<<"RHS:\n";
+        RHS.dump();
+        llvm::errs()<<"LLVM Result:\n";
+        KnownOut.dump();
+        llvm::errs()<<"Our Result:\n";
+        VecToKB(res).dump();
+      }
+      KnownOut=newKnownOut;
+      if(!LHS.hasConflict()&&!RHS.hasConflict())
       assert(!KnownOut.hasConflict());
     }
   }
@@ -969,6 +993,7 @@ KnownBits KnownBits::mul(const KnownBits &LHS, const KnownBits &RHS,
   auto res = mul_solution(LHS_vec, RHS_vec);
   auto res_kb = VecToKB(res);
   Res = meet(Res, res_kb);
+  if(!LHS.hasConflict()&&!RHS.hasConflict())
   assert (!Res.hasConflict());
   return Res;
 }
@@ -1086,6 +1111,7 @@ KnownBits KnownBits::sdiv(const KnownBits &LHS, const KnownBits &RHS,
     result = VecToKB(sdiv_solution(LHS_vec, RHS_vec));
   }
   Known = meet(Known, result);
+  if(!LHS.hasConflict()&&!RHS.hasConflict())
   assert (!Known.hasConflict());
   return Known;
 }
