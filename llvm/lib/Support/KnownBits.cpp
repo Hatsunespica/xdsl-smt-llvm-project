@@ -17,16 +17,20 @@
 #include "llvm/Support/TFImpl/APInt.h"
 #include "llvm/Support/TFImpl/XORImpl.h"
 #include "llvm/Support/TFImpl/MulImpl.h"
-#include "llvm/Support/TFImpl/AddImpl.h"
+//#include "llvm/Support/TFImpl/AddImpl.h"
+#include "llvm/Support/TFImpl/AddImplNew.h"
 #include "llvm/Support/TFImpl/SubImpl.h"
 #include "llvm/Support/TFImpl/LshrExactImpl.h"
-#include "llvm/Support/TFImpl/LshrImpl.h"
+//#include "llvm/Support/TFImpl/LshrImpl.h"
+#include "llvm/Support/TFImpl/LshrImplNew.h"
 #include "llvm/Support/TFImpl/AshrExactImpl.h"
 #include "llvm/Support/TFImpl/AshrImpl.h"
 #include "llvm/Support/TFImpl/ShlImpl.h"
 #include "llvm/Support/TFImpl/ShlNUWImpl.h"
 #include "llvm/Support/TFImpl/ShlNSWImpl.h"
 #include "llvm/Support/TFImpl/ShlNSUWImpl.h"
+//#include "llvm/Support/TFImpl/ShlNSUWImpl36.h"
+//#include "llvm/Support/TFImpl/ShlNSUWImplNew.h"
 #include "llvm/Support/TFImpl/SDivImpl.h"
 #include "llvm/Support/TFImpl/SDivExactImpl.h"
 
@@ -319,7 +323,7 @@ KnownBits KnownBits::shl(const KnownBits &LHS, const KnownBits &RHS, bool NUW,
   auto newRHS = RHS.zextOrTrunc(LHS.getBitWidth());
   auto LHS_vec = KBToVec(LHS), RHS_vec = KBToVec(newRHS);
   if (NUW&&NSW){
-    //return VecToKB(shl_nsuw_solution(LHS_vec, RHS_vec));
+    return VecToKB(shl_nsuw_solution(LHS_vec, RHS_vec));
   }else if(NUW){
     //return VecToKB(shl_nuw_solution(LHS_vec, RHS_vec));
   }else if(NSW){
