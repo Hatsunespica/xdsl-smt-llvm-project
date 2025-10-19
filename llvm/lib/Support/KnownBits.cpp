@@ -28,9 +28,9 @@
 #include "llvm/Support/TFImpl/ShlImpl.h"
 #include "llvm/Support/TFImpl/ShlNUWImpl.h"
 #include "llvm/Support/TFImpl/ShlNSWImpl.h"
-#include "llvm/Support/TFImpl/ShlNSUWImpl.h"
+//#include "llvm/Support/TFImpl/ShlNSUWImpl.h"
 //#include "llvm/Support/TFImpl/ShlNSUWImpl36.h"
-//#include "llvm/Support/TFImpl/ShlNSUWImplNew.h"
+#include "llvm/Support/TFImpl/ShlNSUWImplNew.h"
 #include "llvm/Support/TFImpl/SDivImpl.h"
 #include "llvm/Support/TFImpl/SDivExactImpl.h"
 
@@ -103,12 +103,12 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
       // Sum = LHS + RHS + 0
       KnownOut = ::computeForAddCarry(LHS, RHS, /*CarryZero=*/true,
                                       /*CarryOne=*/false);
-      //auto res = add_solution(LHS_vec, RHS_vec);
-      //KnownOut= VecToKB(res);
+      auto res = add_solution(LHS_vec, RHS_vec);
+      KnownOut= VecToKB(res);
     } else {
       // Sum = LHS + ~RHS + 1
-      //auto res = sub_solution(LHS_vec, RHS_vec);
-      //KnownOut= VecToKB(res);
+      auto res = sub_solution(LHS_vec, RHS_vec);
+      KnownOut= VecToKB(res);
       KnownBits NotRHS = RHS;
       std::swap(NotRHS.Zero, NotRHS.One);
       KnownOut = ::computeForAddCarry(LHS, NotRHS, /*CarryZero=*/false,
@@ -325,11 +325,11 @@ KnownBits KnownBits::shl(const KnownBits &LHS, const KnownBits &RHS, bool NUW,
   if (NUW&&NSW){
     return VecToKB(shl_nsuw_solution(LHS_vec, RHS_vec));
   }else if(NUW){
-    //return VecToKB(shl_nuw_solution(LHS_vec, RHS_vec));
+    return VecToKB(shl_nuw_solution(LHS_vec, RHS_vec));
   }else if(NSW){
-    //return VecToKB(shl_nsw_solution(LHS_vec, RHS_vec));
+    return VecToKB(shl_nsw_solution(LHS_vec, RHS_vec));
   }else{
-    //return VecToKB(shl_solution(LHS_vec, RHS_vec));
+    return VecToKB(shl_solution(LHS_vec, RHS_vec));
   }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known;
@@ -419,11 +419,11 @@ KnownBits KnownBits::lshr(const KnownBits &LHS, const KnownBits &RHS,
   auto newRHS = RHS.zextOrTrunc(LHS.getBitWidth());
   auto LHS_vec = KBToVec(LHS), RHS_vec = KBToVec(newRHS);
   if(Exact){
-//    auto res = lshrexact_solution(LHS_vec, RHS_vec);
-    //return VecToKB(res);
+    auto res = lshrexact_solution(LHS_vec, RHS_vec);
+    return VecToKB(res);
   }else{
-    //auto res = lshr_solution(LHS_vec, RHS_vec);
-    //return VecToKB(res);
+    auto res = lshr_solution(LHS_vec, RHS_vec);
+    return VecToKB(res);
   }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known = LHS;
@@ -486,9 +486,9 @@ KnownBits KnownBits::ashr(const KnownBits &LHS, const KnownBits &RHS,
   auto newRHS=RHS.zextOrTrunc(BitWidth);
   auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
   if (Exact){
-    //return VecToKB(ashr_exact_solution(LHS_vec, RHS_vec));
+    return VecToKB(ashr_exact_solution(LHS_vec, RHS_vec));
   }else{
-    //return VecToKB(ashr_solution(LHS_vec, RHS_vec));
+    return VecToKB(ashr_solution(LHS_vec, RHS_vec));
   }
   auto ShiftByConst = [&](const KnownBits &LHS, unsigned ShiftAmt) {
     KnownBits Known = LHS;
@@ -869,10 +869,10 @@ KnownBits KnownBits::mul(const KnownBits &LHS, const KnownBits &RHS,
   assert(BitWidth == RHS.getBitWidth() && "Operand mismatch");
   assert((!NoUndefSelfMultiply || LHS == RHS) &&
          "Self multiplication knownbits mismatch");
-  //auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
-  //auto res = mul_solution(LHS_vec, RHS_vec);
-  //auto res_kb = VecToKB(res);
-  //return res_kb;
+  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
+  auto res = mul_solution(LHS_vec, RHS_vec);
+  auto res_kb = VecToKB(res);
+  return res_kb;
   // Compute the high known-0 bits by multiplying the unsigned max of each side.
   // Conservatively, M active bits * N active bits results in M + N bits in the
   // result. But if we know a value is a power-of-2 for example, then this
@@ -1032,9 +1032,9 @@ KnownBits KnownBits::sdiv(const KnownBits &LHS, const KnownBits &RHS,
   }
   auto LHS_vec= KBToVec(LHS), RHS_vec= KBToVec(RHS);
   if(Exact){
-    //return VecToKB(sdiv_exact_solution(LHS_vec, RHS_vec));
+    return VecToKB(sdiv_exact_solution(LHS_vec, RHS_vec));
   }else{
-    //return VecToKB(sdiv_solution(LHS_vec, RHS_vec));
+    return VecToKB(sdiv_solution(LHS_vec, RHS_vec));
   }
 
   std::optional<APInt> Res;
