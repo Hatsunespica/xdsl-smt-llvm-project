@@ -484,7 +484,7 @@ KnownBits KnownBits::ashr(const KnownBits &LHS, const KnownBits &RHS,
                           bool ShAmtNonZero, bool Exact) {
   unsigned BitWidth = LHS.getBitWidth();
   auto newRHS=RHS.zextOrTrunc(BitWidth);
-  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
+  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(newRHS);
   if (Exact){
     return VecToKB(ashr_exact_solution(LHS_vec, RHS_vec));
   }else{
