@@ -99,7 +99,6 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
                                       const KnownBits &RHS) {
   unsigned BitWidth = LHS.getBitWidth();
   KnownBits KnownOut(BitWidth);
-  auto LHS_vec = KBToVec(LHS), RHS_vec= KBToVec(RHS);
   // This can be a relatively expensive helper, so optimistically save some
   // work.
   if (LHS.isUnknown() && RHS.isUnknown())
@@ -110,8 +109,8 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
       // Sum = LHS + RHS + 0
       KnownOut = ::computeForAddCarry(LHS, RHS, /*CarryZero=*/true,
                                       /*CarryOne=*/false);
-      auto res = add_solution(LHS_vec, RHS_vec);
-      KnownOut= merge(VecToKB(res), KnownOut);
+      auto res = add_solution(LHS, RHS);
+      KnownOut= merge(res, KnownOut);
       assert(!KnownOut.hasConflict());
     } else {
       // Sum = LHS + ~RHS + 1
@@ -119,8 +118,8 @@ KnownBits KnownBits::computeForAddSub(bool Add, bool NSW, bool NUW,
       std::swap(NotRHS.Zero, NotRHS.One);
       KnownOut = ::computeForAddCarry(LHS, NotRHS, /*CarryZero=*/false,
                                     /*CarryOne=*/true);
-      auto res = sub_solution(LHS_vec, RHS_vec);
-      KnownOut= merge(KnownOut,VecToKB(res));
+      auto res = sub_solution(LHS, RHS);
+      KnownOut= merge(KnownOut,res);
       assert(!KnownOut.hasConflict());
     }
   }

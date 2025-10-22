@@ -71,4 +71,11 @@ APInt umax(APInt arg0, APInt arg1){
   return arg0.uge(arg1)?arg0:arg1;
 }
 
+KnownBits meet(KnownBits a, KnownBits b){
+  KnownBits res=a;
+  res.Zero &= b.Zero;
+  res.One &= b.One;
+  return res;
+}
+
 #endif
